@@ -19,28 +19,29 @@ applications/
 sudo apt-get install build-essential cmake pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev clang-tidy
 ```
 
-## ビルド
+## ビルド・実行
+
+各アプリケーションは独立してビルドします：
 
 ```bash
+# 例: 01_hello_world
+cd applications/01_hello_world
 mkdir -p build
 cd build
 cmake ..
 make
+
+# 実行
+./hello_world
+
+# テスト
+./hello_world_test
 ```
 
-## 実行
+## 共通設定
 
-各アプリケーションは個別に実行できます：
+- `.clang-format` - C++コードフォーマット設定
+- `.clang-tidy` - 静的解析設定
+- `CLAUDE.md` - 開発ガイドライン
 
-```bash
-./build/applications/01_hello_world/hello_world
-```
-
-## テスト
-
-```bash
-cd build
-ctest
-# または個別に
-./build/applications/01_hello_world/hello_world_test
-```
+これらの設定は全てのアプリケーションに自動的に適用されます。
