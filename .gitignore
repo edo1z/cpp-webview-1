@@ -1,0 +1,72 @@
+# Build directories
+build/
+out/
+cmake-build-*/
+.build/
+
+# Compiled files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+compile_commands.json
+
+# Debug files
+*.pdb
+*.ilk
+*.idb
+
+# Dependencies
+vendor/
+third_party/
+deps/
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Test coverage
+*.gcov
+*.gcda
+*.gcno
+coverage/
+.coverage
+
+# Documentation
+docs/html/
+docs/latex/
+
+# Package files
+*.tar.gz
+*.zip
+
+# Node modules (if using web tools)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment files
+.env
+.env.local
