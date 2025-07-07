@@ -64,5 +64,23 @@ make
   - 全てのテストがパスすることを確認
   - テストをパスさせるための無益な修正は行わない
   - ビルドエラー・警告を修正してからコミット
-  - 修正したファイルに対するLSPツールのエラー・警告を全てチェックして、なくなるように修正する
+  - **LSPツールのエラー・警告チェック**:
+    ```bash
+    # clang-tidyで全ソースファイルの警告を確認
+    clang-tidy src/*.cpp tests/*.cpp -- \
+      -I./include \
+      -I./build/_deps/googletest-src/googletest/include \
+      -I./build/_deps/webview-src \
+      -x c++ -std=c++17 2>&1 | \
+      grep -E "(warning|error):" | grep -v "generated"
+    
+    # 特定のファイルだけチェックする場合
+    clang-tidy src/webview_app.cpp -- -I./include -x c++ -std=c++17
+    ```
+  - 上記コマンドで検出されたエラー・警告を全て修正してからコミット
+  - 主な警告タイプ:
+    - `cppcoreguidelines-special-member-functions`: Rule of Five（デストラクタ定義時は5つの特殊メンバ関数を考慮）
+    - `modernize-*`: C++17の機能を活用した改善提案
+    - `bugprone-*`: バグになりやすいコードパターン
+    - `performance-*`: パフォーマンス改善の提案
 - メモリリークチェックを定期的に実施（Valgrind等を使用）
