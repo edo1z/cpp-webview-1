@@ -1,32 +1,15 @@
-# C++ Webview プロジェクトの静的解析設定
+---
 Checks: >
   -*,
   bugprone-*,
-  clang-analyzer-*,
   cppcoreguidelines-*,
+  clang-analyzer-*,
   modernize-*,
   performance-*,
   readability-*,
-  -modernize-use-trailing-return-type,
-  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
-  -cppcoreguidelines-owning-memory,
-  -cppcoreguidelines-avoid-magic-numbers,
-  -readability-magic-numbers
+  hicpp-special-member-functions,
+  cppcoreguidelines-special-member-functions
 
-WarningsAsErrors: ''
-HeaderFilterRegex: '.*\.(h|hpp)$'
-FormatStyle: file
-
-CheckOptions:
-  - key: readability-identifier-naming.ClassCase
-    value: PascalCase
-  - key: readability-identifier-naming.FunctionCase
-    value: camelCase
-  - key: readability-identifier-naming.VariableCase
-    value: lower_case
-  - key: readability-identifier-naming.MemberCase
-    value: lower_case
-  - key: readability-identifier-naming.MemberSuffix
-    value: '_'
-  - key: readability-identifier-naming.ConstantCase
-    value: UPPER_CASE
+WarningsAsErrors: ""
+HeaderFilterRegex: ".*"
+FormatStyle: google

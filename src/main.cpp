@@ -3,7 +3,7 @@
 #include <sstream>
 #include <iostream>
 
-std::string loadHtmlFile(const std::string& filepath) {
+auto loadHtmlFile(const std::string& filepath) -> std::string {
     std::ifstream file(filepath);
     if (!file.is_open()) {
         return "<h1>Error: Could not load HTML file</h1>";
@@ -14,9 +14,11 @@ std::string loadHtmlFile(const std::string& filepath) {
     return buffer.str();
 }
 
-int main() {
+auto main() -> int {
     try {
-        WebviewApp app("Hello World", 800, 600);
+        constexpr int DEFAULT_WIDTH = 800;
+        constexpr int DEFAULT_HEIGHT = 600;
+        WebviewApp app("Hello World", DEFAULT_WIDTH, DEFAULT_HEIGHT);
         
         // HTMLファイルを読み込む
         std::string html = loadHtmlFile("../web/index.html");
@@ -26,7 +28,7 @@ int main() {
         app.run();
         
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << '\n';
         return 1;
     }
     
