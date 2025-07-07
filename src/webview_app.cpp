@@ -7,7 +7,7 @@ WebviewApp::WebviewApp(std::string title, int width, int height) // NOLINT(bugpr
     : title_(std::move(title)), 
       width_(width), 
       height_(height),
-      webview_(webview_create(false, nullptr)) {
+      webview_(webview_create(0, nullptr)) {
     webview_set_title(webview_, title_.c_str());
     webview_set_size(webview_, width_, height_, WEBVIEW_HINT_NONE);
 }
