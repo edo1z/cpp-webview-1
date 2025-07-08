@@ -74,3 +74,6 @@ yarn.lock
 # Environment files
 .env
 .env.local
+
+# MCP configuration
+.mcp.json
