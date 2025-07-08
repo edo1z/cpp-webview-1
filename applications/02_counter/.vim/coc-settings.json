@@ -2,7 +2,7 @@
   "clangd.fallbackFlags": [
     "-std=c++17",
     "-I./include",
-    "-I./build/_deps/webview-src/core/include",
+    "-I./build/_deps/webview-src",
     "-I./build/_deps/googletest-src/googletest/include"
   ],
   "clangd.arguments": [
