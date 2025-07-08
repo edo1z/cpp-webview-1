@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カウンターアプリ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+        #counter {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #007bff;
+            margin: 1rem 0;
+        }
+        .buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .increment {
+            background-color: #28a745;
+            color: white;
+        }
+        .decrement {
+            background-color: #dc3545;
+            color: white;
+        }
+        .reset {
+            background-color: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>カウンター</h1>
+        <div id="counter">0</div>
+        <div class="buttons">
+            <button class="increment" onclick="incrementCounter()">+1</button>
+            <button class="decrement" onclick="decrementCounter()">-1</button>
+            <button class="reset" onclick="resetCounter()">リセット</button>
+        </div>
+    </div>
+
+    <script>
+        // 初期表示時にカウントを取得
+        window.onload = async function() {
+            await updateDisplay();
+        };
+
+        async function updateDisplay() {
+            try {
+                const count = await getCount();
+                document.getElementById('counter').textContent = count;
+            } catch (error) {
+                console.error('カウント取得エラー:', error);
+            }
+        }
+
+        async function incrementCounter() {
+            try {
+                const count = await increment();
+                document.getElementById('counter').textContent = count;
+            } catch (error) {
+                console.error('インクリメントエラー:', error);
+            }
+        }
+
+        async function decrementCounter() {
+            try {
+                const count = await decrement();
+                document.getElementById('counter').textContent = count;
+            } catch (error) {
+                console.error('デクリメントエラー:', error);
+            }
+        }
+
+        async function resetCounter() {
+            try {
+                const count = await reset();
+                document.getElementById('counter').textContent = count;
+            } catch (error) {
+                console.error('リセットエラー:', error);
+            }
+        }
+    </script>
+</body>
+</html>

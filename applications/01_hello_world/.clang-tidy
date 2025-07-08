@@ -1,0 +1,15 @@
+---
+Checks: >
+  -*,
+  bugprone-*,
+  cppcoreguidelines-*,
+  clang-analyzer-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  hicpp-special-member-functions,
+  cppcoreguidelines-special-member-functions
+
+WarningsAsErrors: ""
+HeaderFilterRegex: ".*"
+FormatStyle: google

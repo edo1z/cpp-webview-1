@@ -1,0 +1,15 @@
+{
+  "clangd.fallbackFlags": [
+    "-std=c++17",
+    "-I./include",
+    "-I./build/_deps/webview-src/core/include",
+    "-I./build/_deps/googletest-src/googletest/include"
+  ],
+  "clangd.arguments": [
+    "--header-insertion=never",
+    "--compile-commands-dir=build",
+    "--pch-storage=memory",
+    "--background-index",
+    "--clang-tidy"
+  ]
+}
