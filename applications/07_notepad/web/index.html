@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notepad Application</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        
+        .menu-bar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .menu-bar button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+        
+        .menu-bar button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .menu-bar button:active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .separator {
+            width: 1px;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .status-bar {
+            background-color: #34495e;
+            color: white;
+            padding: 5px 15px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-container {
+            flex: 1;
+            display: flex;
+            background-color: white;
+        }
+        
+        #editor {
+            width: 100%;
+            height: 100%;
+            border: none;
+            padding: 20px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            tab-size: 4;
+        }
+        
+        #editor:focus {
+            background-color: #fafafa;
+        }
+        
+        .file-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .file-path {
+            font-weight: bold;
+            color: #ecf0f1;
+        }
+        
+        .char-count, .line-count {
+            color: #bdc3c7;
+            font-size: 12px;
+        }
+        
+        .modified-indicator {
+            color: #e74c3c;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        /* ファイルダイアログのスタイル */
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        
+        .dialog {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 400px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .dialog h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .dialog input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .dialog button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .dialog .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .dialog .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .dialog .btn-secondary {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+        }
+        
+        .dialog .btn-secondary:hover {
+            background-color: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-bar">
+        <button onclick="handleNew()">新規</button>
+        <button onclick="handleOpen()">開く</button>
+        <button onclick="handleSave()">保存</button>
+        <button onclick="handleSaveAs()">名前を付けて保存</button>
+        <div class="separator"></div>
+        <button onclick="handleUndo()">元に戻す</button>
+        <button onclick="handleRedo()">やり直し</button>
+        <div class="separator"></div>
+        <span id="filename">無題</span>
+        <span id="modified" class="modified-indicator" style="display: none;">●</span>
+    </div>
+    
+    <div class="editor-container">
+        <textarea id="editor" placeholder="ここにテキストを入力してください..."></textarea>
+    </div>
+    
+    <div class="status-bar">
+        <div class="file-info">
+            <span class="file-path" id="filepath">新規ファイル</span>
+            <span class="char-count">文字数: <span id="charCount">0</span></span>
+            <span class="line-count">行数: <span id="lineCount">1</span></span>
+        </div>
+        <div>
+            <span id="encoding">UTF-8</span>
+        </div>
+    </div>
+    
+    <!-- ファイルダイアログ -->
+    <div class="dialog-overlay" id="fileDialog">
+        <div class="dialog">
+            <h3 id="dialogTitle">ファイルを開く</h3>
+            <input type="text" id="filePathInput" placeholder="ファイルパスを入力">
+            <div class="dialog-buttons">
+                <button class="btn-secondary" onclick="closeDialog()">キャンセル</button>
+                <button class="btn-primary" onclick="confirmDialog()">OK</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentFilePath = '';
+        let isModified = false;
+        let dialogAction = '';
+        
+        const editor = document.getElementById('editor');
+        const filenameEl = document.getElementById('filename');
+        const filepathEl = document.getElementById('filepath');
+        const modifiedEl = document.getElementById('modified');
+        const charCountEl = document.getElementById('charCount');
+        const lineCountEl = document.getElementById('lineCount');
+        
+        // エディタの変更を監視
+        editor.addEventListener('input', () => {
+            updateModifiedState(true);
+            updateStats();
+        });
+        
+        // 統計情報を更新
+        function updateStats() {
+            const text = editor.value;
+            charCountEl.textContent = text.length;
+            lineCountEl.textContent = text.split('\n').length;
+        }
+        
+        // 修正状態を更新
+        function updateModifiedState(modified) {
+            isModified = modified;
+            modifiedEl.style.display = modified ? 'inline' : 'none';
+        }
+        
+        // ファイル名を表示
+        function updateFileDisplay(filepath) {
+            currentFilePath = filepath;
+            if (filepath) {
+                const filename = filepath.split('/').pop() || filepath.split('\\').pop();
+                filenameEl.textContent = filename;
+                filepathEl.textContent = filepath;
+            } else {
+                filenameEl.textContent = '無題';
+                filepathEl.textContent = '新規ファイル';
+            }
+        }
+        
+        // 新規作成
+        async function handleNew() {
+            if (isModified && !confirm('変更を破棄しますか？')) {
+                return;
+            }
+            
+            try {
+                await newFile();
+                editor.value = '';
+                updateFileDisplay('');
+                updateModifiedState(false);
+                updateStats();
+            } catch (error) {
+                alert('エラーが発生しました: ' + error);
+            }
+        }
+        
+        // ファイルを開く
+        async function handleOpen() {
+            if (isModified && !confirm('変更を破棄しますか？')) {
+                return;
+            }
+            
+            dialogAction = 'open';
+            showDialog('ファイルを開く', '');
+        }
+        
+        // 保存
+        async function handleSave() {
+            if (currentFilePath) {
+                try {
+                    await saveFile(currentFilePath, editor.value);
+                    updateModifiedState(false);
+                    alert('保存しました');
+                } catch (error) {
+                    alert('保存エラー: ' + error);
+                }
+            } else {
+                handleSaveAs();
+            }
+        }
+        
+        // 名前を付けて保存
+        function handleSaveAs() {
+            dialogAction = 'save';
+            showDialog('名前を付けて保存', currentFilePath || 'untitled.txt');
+        }
+        
+        // 元に戻す（簡易実装）
+        function handleUndo() {
+            document.execCommand('undo');
+        }
+        
+        // やり直し（簡易実装）
+        function handleRedo() {
+            document.execCommand('redo');
+        }
+        
+        // ダイアログを表示
+        function showDialog(title, defaultPath) {
+            document.getElementById('dialogTitle').textContent = title;
+            document.getElementById('filePathInput').value = defaultPath;
+            document.getElementById('fileDialog').style.display = 'block';
+            document.getElementById('filePathInput').focus();
+            document.getElementById('filePathInput').select();
+        }
+        
+        // ダイアログを閉じる
+        function closeDialog() {
+            document.getElementById('fileDialog').style.display = 'none';
+        }
+        
+        // ダイアログの確定
+        async function confirmDialog() {
+            const filepath = document.getElementById('filePathInput').value;
+            if (!filepath) {
+                alert('ファイルパスを入力してください');
+                return;
+            }
+            
+            closeDialog();
+            
+            try {
+                if (dialogAction === 'open') {
+                    const result = await openFile(filepath);
+                    editor.value = result.content;
+                    updateFileDisplay(filepath);
+                    updateModifiedState(false);
+                    updateStats();
+                } else if (dialogAction === 'save') {
+                    await saveFile(filepath, editor.value);
+                    updateFileDisplay(filepath);
+                    updateModifiedState(false);
+                    alert('保存しました');
+                }
+            } catch (error) {
+                alert('エラー: ' + error.message || error);
+            }
+        }
+        
+        // キーボードショートカット
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'n':
+                        e.preventDefault();
+                        handleNew();
+                        break;
+                    case 'o':
+                        e.preventDefault();
+                        handleOpen();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        if (e.shiftKey) {
+                            handleSaveAs();
+                        } else {
+                            handleSave();
+                        }
+                        break;
+                }
+            }
+        });
+        
+        // Enterキーでダイアログ確定
+        document.getElementById('filePathInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                confirmDialog();
+            } else if (e.key === 'Escape') {
+                closeDialog();
+            }
+        });
+        
+        // 初期化
+        updateStats();
+    </script>
+</body>
+</html>

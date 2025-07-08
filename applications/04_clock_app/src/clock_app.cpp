@@ -4,8 +4,7 @@
 #include <iomanip>
 #include <sstream>
 
-ClockApp::ClockApp() : timerRunning(false) {
-    w = webview_create(0, nullptr);
+ClockApp::ClockApp() : timerRunning(false), w(webview_create(0, nullptr)) {
     webview_set_title(w, "Clock Application");
     webview_set_size(w, 600, 400, WEBVIEW_HINT_NONE);
 }
