@@ -3,6 +3,7 @@ project(hello_world)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # 親プロジェクトからビルドされているかチェック
 if(NOT DEFINED WEBVIEW_INCLUDE_DIR)
