@@ -1,4 +1,4 @@
-# 07 Notepad Application
+# 05 Notepad Application
 
 テキストファイルの保存・読み込み機能を持つメモ帳アプリケーションです。
 
@@ -11,7 +11,7 @@
 
 ## ビルド方法
 ```bash
-cd applications/07_notepad
+cd applications/05_notepad
 mkdir build
 cd build
 cmake ..
