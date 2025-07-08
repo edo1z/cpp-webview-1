@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clock Application</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        #digital-clock {
+            font-size: 72px;
+            font-weight: 300;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            font-family: 'Courier New', monospace;
+        }
+        
+        #date {
+            font-size: 24px;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+        
+        .analog-clock {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 30px;
+            position: relative;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .hand {
+            position: absolute;
+            background: white;
+            transform-origin: bottom center;
+            bottom: 50%;
+            left: 50%;
+            border-radius: 10px;
+        }
+        
+        .hour-hand {
+            width: 6px;
+            height: 60px;
+            margin-left: -3px;
+        }
+        
+        .minute-hand {
+            width: 4px;
+            height: 80px;
+            margin-left: -2px;
+        }
+        
+        .second-hand {
+            width: 2px;
+            height: 90px;
+            margin-left: -1px;
+            background: #ff6b6b;
+        }
+        
+        .center-dot {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .status {
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        /* 時計の数字 */
+        .clock-number {
+            position: absolute;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .twelve { top: 10px; left: 50%; transform: translateX(-50%); }
+        .three { right: 10px; top: 50%; transform: translateY(-50%); }
+        .six { bottom: 10px; left: 50%; transform: translateX(-50%); }
+        .nine { left: 10px; top: 50%; transform: translateY(-50%); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="digital-clock">00:00:00</div>
+        <div id="date"></div>
+        
+        <div class="analog-clock">
+            <div class="clock-number twelve">12</div>
+            <div class="clock-number three">3</div>
+            <div class="clock-number six">6</div>
+            <div class="clock-number nine">9</div>
+            <div class="hand hour-hand" id="hour-hand"></div>
+            <div class="hand minute-hand" id="minute-hand"></div>
+            <div class="hand second-hand" id="second-hand"></div>
+            <div class="center-dot"></div>
+        </div>
+        
+        <div class="buttons">
+            <button onclick="toggleTimer()">
+                <span id="timer-btn-text">停止</span>
+            </button>
+            <button onclick="toggleFormat()">
+                <span id="format-btn-text">12時間表示</span>
+            </button>
+        </div>
+        
+        <div class="status" id="status">実行中</div>
+    </div>
+    
+    <script>
+        let is24Hour = true;
+        let currentTimeStr = '';
+        
+        // C++から呼ばれる関数
+        function updateClock(timeStr) {
+            currentTimeStr = timeStr;
+            
+            // デジタル時計を更新
+            if (is24Hour) {
+                document.getElementById('digital-clock').textContent = timeStr;
+            } else {
+                // 24時間形式から12時間形式に変換
+                const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+                let displayHour = hours;
+                let period = 'AM';
+                
+                if (hours === 0) {
+                    displayHour = 12;
+                } else if (hours === 12) {
+                    period = 'PM';
+                } else if (hours > 12) {
+                    displayHour = hours - 12;
+                    period = 'PM';
+                }
+                
+                const formatted = `${displayHour}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${period}`;
+                document.getElementById('digital-clock').textContent = formatted;
+            }
+            
+            // アナログ時計を更新
+            updateAnalogClock(timeStr);
+            
+            // 日付を更新
+            updateDate();
+        }
+        
+        function updateAnalogClock(timeStr) {
+            const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+            
+            const hourDeg = (hours % 12) * 30 + minutes * 0.5;
+            const minuteDeg = minutes * 6 + seconds * 0.1;
+            const secondDeg = seconds * 6;
+            
+            document.getElementById('hour-hand').style.transform = `rotate(${hourDeg}deg)`;
+            document.getElementById('minute-hand').style.transform = `rotate(${minuteDeg}deg)`;
+            document.getElementById('second-hand').style.transform = `rotate(${secondDeg}deg)`;
+        }
+        
+        function updateDate() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'long' 
+            };
+            const dateStr = now.toLocaleDateString('ja-JP', options);
+            document.getElementById('date').textContent = dateStr;
+        }
+        
+        async function toggleTimer() {
+            try {
+                const result = await toggleTimer();
+                if (result === 'stopped') {
+                    document.getElementById('timer-btn-text').textContent = '開始';
+                    document.getElementById('status').textContent = '停止中';
+                } else {
+                    document.getElementById('timer-btn-text').textContent = '停止';
+                    document.getElementById('status').textContent = '実行中';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        async function toggleFormat() {
+            try {
+                is24Hour = !is24Hour;
+                document.getElementById('format-btn-text').textContent = is24Hour ? '12時間表示' : '24時間表示';
+                await toggleFormat();
+                
+                // 現在の時刻で表示を更新
+                if (currentTimeStr) {
+                    updateClock(currentTimeStr);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        // 初期化
+        updateDate();
+    </script>
+</body>
+</html>
