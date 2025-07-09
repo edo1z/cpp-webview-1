@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Picker Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .result-section h2 {
+            color: #495057;
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        #result {
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #212529;
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+            min-height: 100px;
+        }
+        
+        .filter-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 6px;
+        }
+        
+        .filter-section label {
+            display: block;
+            margin-bottom: 10px;
+            color: #495057;
+            font-weight: 500;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 6px 12px;
+            font-size: 14px;
+            background-color: #6c757d;
+            border-radius: 4px;
+        }
+        
+        .filter-btn:hover {
+            background-color: #5a6268;
+        }
+        
+        .filter-btn.active {
+            background-color: #28a745;
+        }
+        
+        .filter-btn.active:hover {
+            background-color: #218838;
+        }
+        
+        .status {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+    <script>
+        // デバッグ用: Ctrl+Shift+I でデベロッパーツールを開く試み
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                console.log('Developer tools shortcut pressed');
+                // Linux/GTK WebKitでは右クリックメニューから開く必要がある場合があります
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>File Picker Demo</h1>
+        
+        <div class="filter-section">
+            <label>ファイルフィルター:</label>
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="toggleFilter('all')">すべてのファイル</button>
+                <button class="filter-btn" onclick="toggleFilter('text')">テキストファイル</button>
+                <button class="filter-btn" onclick="toggleFilter('image')">画像ファイル</button>
+                <button class="filter-btn" onclick="toggleFilter('custom')">カスタム</button>
+            </div>
+        </div>
+        
+        <div class="status" id="status"></div>
+        
+        <div class="button-group">
+            <button onclick="handleOpenSingleFile()">ファイルを開く</button>
+            <button onclick="handleOpenMultipleFiles()">複数ファイルを開く</button>
+            <button onclick="handleOpenDirectory()">フォルダを開く</button>
+            <button onclick="handleSaveFile()">名前を付けて保存</button>
+        </div>
+        
+        <div class="result-section">
+            <h2>選択結果:</h2>
+            <div id="result">まだファイルが選択されていません</div>
+        </div>
+        
+        <div class="result-section" style="margin-top: 20px;">
+            <h2>デバッグ情報:</h2>
+            <div id="debug" style="font-size: 12px; color: #666;">
+                <p>デベロッパーツールを開くには：</p>
+                <ul>
+                    <li>ウィンドウ内で右クリック → 「要素を検証」または「Inspect Element」</li>
+                    <li>F12キー（環境によっては動作しない場合があります）</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentFilter = 'all';
+        
+        // デバッグ情報を画面に表示
+        function debugLog(message) {
+            const debugDiv = document.getElementById('debug');
+            const timestamp = new Date().toLocaleTimeString();
+            debugDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            console.log(message);
+            
+            // 最新のログが見えるようにスクロール
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+        
+        // ページ読み込み時にバインディングをチェック
+        window.addEventListener('load', function() {
+            debugLog('Page loaded');
+            debugLog('window.openDirectory type: ' + typeof window.openDirectory);
+            debugLog('window.openFile type: ' + typeof window.openFile);
+            debugLog('window.openFiles type: ' + typeof window.openFiles);
+            debugLog('window.saveFile type: ' + typeof window.saveFile);
+        });
+        
+        function getFilters() {
+            switch(currentFilter) {
+                case 'text':
+                    return [
+                        { description: "Text Files", extensions: ["txt", "md", "log"] },
+                        { description: "All Files", extensions: ["*"] }
+                    ];
+                case 'image':
+                    return [
+                        { description: "Image Files", extensions: ["png", "jpg", "jpeg", "gif", "bmp"] },
+                        { description: "All Files", extensions: ["*"] }
+                    ];
+                case 'custom':
+                    return [
+                        { description: "Source Files", extensions: ["cpp", "h", "c", "hpp"] },
+                        { description: "Web Files", extensions: ["html", "css", "js"] },
+                        { description: "All Files", extensions: ["*"] }
+                    ];
+                default:
+                    return [{ description: "All Files", extensions: ["*"] }];
+            }
+        }
+        
+        function toggleFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+        
+        async function handleOpenSingleFile() {
+            try {
+                const filters = getFilters();
+                const result = await window.openFile("ファイルを選択", filters);
+                console.log('Result type:', typeof result);
+                console.log('Result:', result);
+                
+                // resultが既にオブジェクトの場合とJSON文字列の場合の両方に対応
+                const data = typeof result === 'string' ? JSON.parse(result) : result;
+                
+                if (data.path) {
+                    document.getElementById('result').textContent = 
+                        `選択されたファイル:\n${data.path}`;
+                    showStatus('ファイルが選択されました', 'success');
+                } else {
+                    document.getElementById('result').textContent = 
+                        'キャンセルされました';
+                    showStatus('操作がキャンセルされました', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('エラーが発生しました', 'error');
+            }
+        }
+        
+        async function handleOpenMultipleFiles() {
+            try {
+                const filters = getFilters();
+                const result = await window.openFiles("複数のファイルを選択", filters);
+                const data = typeof result === 'string' ? JSON.parse(result) : result;
+                
+                if (data.paths && data.paths.length > 0) {
+                    document.getElementById('result').textContent = 
+                        `選択されたファイル (${data.paths.length}個):\n${data.paths.join('\n')}`;
+                    showStatus(`${data.paths.length}個のファイルが選択されました`, 'success');
+                } else {
+                    document.getElementById('result').textContent = 
+                        'キャンセルされました';
+                    showStatus('操作がキャンセルされました', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('エラーが発生しました', 'error');
+            }
+        }
+        
+        async function handleOpenDirectory() {
+            try {
+                debugLog('openDirectory called');
+                debugLog('Checking if window.openDirectory exists: ' + (typeof window.openDirectory));
+                
+                if (typeof window.openDirectory !== 'function') {
+                    throw new Error('window.openDirectory is not a function');
+                }
+                
+                debugLog('Calling window.openDirectory...');
+                const result = await window.openDirectory("フォルダを選択");
+                debugLog('Result type: ' + typeof result);
+                debugLog('Result: ' + JSON.stringify(result));
+                
+                const data = typeof result === 'string' ? JSON.parse(result) : result;
+                debugLog('Parsed data: ' + JSON.stringify(data));
+                
+                if (data.path) {
+                    document.getElementById('result').textContent = 
+                        `選択されたフォルダ:\n${data.path}`;
+                    showStatus('フォルダが選択されました', 'success');
+                } else {
+                    document.getElementById('result').textContent = 
+                        'キャンセルされました';
+                    showStatus('操作がキャンセルされました', 'error');
+                }
+            } catch (error) {
+                debugLog('Error: ' + error.message);
+                debugLog('Stack: ' + error.stack);
+                console.error('Error details:', error);
+                console.error('Error stack:', error.stack);
+                showStatus('エラーが発生しました: ' + error.message, 'error');
+            }
+        }
+        
+        async function handleSaveFile() {
+            try {
+                const filters = getFilters();
+                const defaultName = currentFilter === 'text' ? 'document.txt' : 
+                                  currentFilter === 'image' ? 'image.png' : 
+                                  'file.dat';
+                
+                const result = await window.saveFile("名前を付けて保存", defaultName, filters);
+                const data = typeof result === 'string' ? JSON.parse(result) : result;
+                
+                if (data.path) {
+                    document.getElementById('result').textContent = 
+                        `保存先:\n${data.path}`;
+                    showStatus('保存先が選択されました', 'success');
+                } else {
+                    document.getElementById('result').textContent = 
+                        'キャンセルされました';
+                    showStatus('操作がキャンセルされました', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('エラーが発生しました', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

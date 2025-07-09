@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Directory Test</title>
+</head>
+<body>
+    <h1>Directory Dialog Test</h1>
+    <button onclick="testDirectory()">Test Directory</button>
+    <pre id="output"></pre>
+    
+    <script>
+        async function testDirectory() {
+            const output = document.getElementById('output');
+            output.textContent = 'Testing...\n';
+            
+            try {
+                // まず関数が存在するか確認
+                if (typeof window.openDirectory !== 'function') {
+                    output.textContent += 'Error: window.openDirectory is not a function\n';
+                    return;
+                }
+                
+                output.textContent += 'Calling window.openDirectory...\n';
+                const result = await window.openDirectory("フォルダを選択");
+                
+                output.textContent += `Result type: ${typeof result}\n`;
+                output.textContent += `Result: ${JSON.stringify(result)}\n`;
+                
+                if (typeof result === 'string') {
+                    try {
+                        const parsed = JSON.parse(result);
+                        output.textContent += `Parsed: ${JSON.stringify(parsed)}\n`;
+                    } catch (e) {
+                        output.textContent += `Parse error: ${e.message}\n`;
+                    }
+                }
+            } catch (error) {
+                output.textContent += `Error: ${error.message}\n`;
+                output.textContent += `Stack: ${error.stack}\n`;
+            }
+        }
+    </script>
+</body>
+</html>
