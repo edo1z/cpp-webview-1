@@ -127,10 +127,16 @@ std::string RequestParser::parseOpenDirectoryRequest(const std::string& json) {
         throw std::invalid_argument("Failed to parse JSON: " + reader.getFormattedErrorMessages());
     }
     
-    // 単一の文字列を期待
-    if (!root.isString()) {
-        throw std::invalid_argument("Expected a string for directory title");
+    // webviewは引数を配列でラップするため、配列形式も受け入れる
+    if (root.isArray() && root.size() > 0) {
+        if (!root[0].isString()) {
+            throw std::invalid_argument("Expected a string for directory title in array");
+        }
+        return root[0].asString();
+    } else if (root.isString()) {
+        // 単一の文字列も受け入れる（テスト用）
+        return root.asString();
+    } else {
+        throw std::invalid_argument("Expected a string or array with string for directory title");
     }
-    
-    return root.asString();
 }

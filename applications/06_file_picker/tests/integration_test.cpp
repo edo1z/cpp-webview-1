@@ -12,12 +12,12 @@ protected:
 };
 
 // フォルダ選択で送られる実際のリクエスト形式をテスト
-TEST_F(IntegrationTest, OpenDirectory_SingleStringParameter) {
-    // JavaScriptから送られる実際の形式: 単一の文字列
-    std::string jsRequest = R"("フォルダを選択")";
+TEST_F(IntegrationTest, OpenDirectory_ArrayParameter) {
+    // webviewは自動的に引数を配列でラップする
+    std::string jsRequest = R"(["フォルダを選択"])";
     
-    // これは現在の実装でエラーになるはず
-    EXPECT_THROW(RequestParser::parseOpenFileRequest(jsRequest), std::invalid_argument);
+    std::string title = RequestParser::parseOpenDirectoryRequest(jsRequest);
+    EXPECT_EQ(title, "フォルダを選択");
 }
 
 // openFileの正しい形式
@@ -30,13 +30,13 @@ TEST_F(IntegrationTest, OpenFile_CorrectArrayFormat) {
     });
 }
 
-// 修正案: openDirectoryは単一パラメータのみ
+// openDirectoryの単一文字列形式も受け入れる（後方互換性）
 TEST_F(IntegrationTest, ParseOpenDirectoryRequest_SingleString) {
     std::string jsRequest = R"("フォルダを選択")";
     
-    // 新しいパーサーメソッドが必要
-    // std::string title = RequestParser::parseOpenDirectoryRequest(jsRequest);
-    // EXPECT_EQ(title, "フォルダを選択");
+    // 単一文字列形式も受け入れる
+    std::string title = RequestParser::parseOpenDirectoryRequest(jsRequest);
+    EXPECT_EQ(title, "フォルダを選択");
 }
 
 // JavaScriptバインディングのシミュレーションテスト
@@ -61,15 +61,15 @@ protected:
     std::string lastReturnResult;
 };
 
-// handleOpenDirectoryの問題を検出するテスト
-TEST_F(FilePickerAppIntegrationTest, HandleOpenDirectory_WrongRequestFormat) {
-    // 実際のJavaScriptから送られる形式
-    const char* req = R"("フォルダを選択")";
+// handleOpenDirectoryの正しいリクエスト形式
+TEST_F(FilePickerAppIntegrationTest, HandleOpenDirectory_ArrayFormat) {
+    // webviewから送られる実際の形式（配列）
+    const char* req = R"(["フォルダを選択"])";
     
-    // この呼び出しはエラーになるはず（配列形式を期待しているため）
-    // app->handleOpenDirectory("123", req);
+    mockDialog->setOpenDirectoryResult("/home/user/documents");
     
-    // エラーレスポンスが返されることを確認
-    // EXPECT_EQ(lastReturnStatus, 1);
-    // EXPECT_TRUE(lastReturnResult.find("error") != std::string::npos);
+    // 実際のアプリケーションではwebview_returnが呼ばれるが、
+    // ここではdirectにメソッドを呼ぶことでテスト
+    std::string result = app->openDirectoryDialog("フォルダを選択");
+    EXPECT_EQ(result, "/home/user/documents");
 }

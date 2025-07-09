@@ -194,8 +194,31 @@ TEST_F(RequestParserTest, ParseOpenDirectoryRequest_NotString) {
 }
 
 TEST_F(RequestParserTest, ParseOpenDirectoryRequest_ArrayFormat) {
-    // 古い形式（配列）を渡した場合のエラー
-    std::string json = R"(["Select Directory", []])";
+    // webviewは引数を配列でラップするため、配列形式も受け入れる
+    std::string json = R"(["Select Directory"])";
+    
+    std::string title = RequestParser::parseOpenDirectoryRequest(json);
+    EXPECT_EQ(title, "Select Directory");
+}
+
+TEST_F(RequestParserTest, ParseOpenDirectoryRequest_ArrayFormatJapanese) {
+    // 日本語の配列形式
+    std::string json = R"(["フォルダを選択"])";
+    
+    std::string title = RequestParser::parseOpenDirectoryRequest(json);
+    EXPECT_EQ(title, "フォルダを選択");
+}
+
+TEST_F(RequestParserTest, ParseOpenDirectoryRequest_EmptyArray) {
+    // 空の配列はエラー
+    std::string json = R"([])";
+    
+    EXPECT_THROW(RequestParser::parseOpenDirectoryRequest(json), std::invalid_argument);
+}
+
+TEST_F(RequestParserTest, ParseOpenDirectoryRequest_ArrayWithNonString) {
+    // 配列の最初の要素が文字列でない場合はエラー
+    std::string json = R"([123])";
     
     EXPECT_THROW(RequestParser::parseOpenDirectoryRequest(json), std::invalid_argument);
 }
